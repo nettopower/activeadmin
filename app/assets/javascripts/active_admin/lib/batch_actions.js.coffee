@@ -1,4 +1,8 @@
 onDOMReady = ->
+  # Detach any previously attached handlers before re-attaching them.
+  # This avoids double-registered handlers when Turbolinks is enabled
+  $('.batch_actions_selector li a').off('click confirm:complete');
+
   #
   # Use ActiveAdmin.modal_dialog to prompt user if confirmation is required for current Batch Action
   #
