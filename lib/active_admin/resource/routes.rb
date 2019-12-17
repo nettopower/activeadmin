@@ -20,7 +20,11 @@ module ActiveAdmin
       end
 
       def route_edit_instance_path(resource, additional_params = {})
-        route_builder.edit_instance_path(resource, additional_params)
+        route_builder.member_action_path(:edit, resource, additional_params)
+      end
+
+      def route_member_action_path(action, resource, additional_params = {})
+        route_builder.member_action_path(action, resource, additional_params)
       end
 
       # Returns the routes prefix for this config
@@ -75,12 +79,13 @@ module ActiveAdmin
           routes.public_send route_name, *route_instance_params(instance), additional_params
         end
 
-        # @return [String] the path to the edit page of this resource
+        # @return [String] the path to the member action of this resource
+        # @param action [Symbol]
         # @param instance [ActiveRecord::Base] the instance we want the path of
         # @example "/admin/posts/1/edit"
-        def edit_instance_path(instance, additional_params = {})
+        def member_action_path(action, instance, additional_params = {})
           path = resource.resources_configuration[:self][:route_instance_name]
-          route_name = route_name(path, action: :edit)
+          route_name = route_name(path, action: action)
 
           routes.public_send route_name, *route_instance_params(instance), additional_params
         end
@@ -105,7 +110,7 @@ module ActiveAdmin
         # @return params to pass to instance path
         def route_instance_params(instance)
           if nested?
-            [instance.public_send(belongs_to_name).to_param, instance.to_param]
+            [instance.public_send(belongs_to_target_name).to_param, instance.to_param]
           else
             instance.to_param
           end
@@ -118,11 +123,19 @@ module ActiveAdmin
         end
 
         def nested?
-          resource.belongs_to? && resource.belongs_to_config.required?
+          resource.belongs_to? && belongs_to_config.required?
+        end
+
+        def belongs_to_target_name
+          belongs_to_config.target_name
         end
 
         def belongs_to_name
-          resource.belongs_to_config.target.resource_name.singular if nested?
+          belongs_to_config.target.resource_name.singular
+        end
+
+        def belongs_to_config
+          resource.belongs_to_config
         end
 
         def routes
